@@ -1,0 +1,15 @@
+/.idea/
+
+/node_modules/
+package-lock.json
+/build
+
+yarn.lock
+yarn-error.log
+
+.DS_Store
+*.cache
+.cache
+.buildpath
+.project
+.settings
