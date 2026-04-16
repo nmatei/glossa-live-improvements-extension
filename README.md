@@ -8,6 +8,9 @@
 
 - [x] `🔲 Fullscreen` in context menu in [glossa.live](https://glossa.live) - as a client - inside live captions
       this will allow you to fullscreen only the live captions and hide the entire page that has a lot of distractions and is not needed when you want to focus on the live captions
+- [ ] Custom background & text colors
+- [ ] integration with https://github.com/nmatei/chrome-bible-utilities?
+      (to be able to project text directly on those projectors screens, without the need to customise styles)
 
 ## ⚙ Setup Plugin as Developer
 
