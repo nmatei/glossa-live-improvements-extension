@@ -1,5 +1,5 @@
 document.body.addEventListener("contextmenu", e => {
-  const content = e.target.closest(".bg-white");
+  const content = e.target.closest("div.bg-white");
   if (content) {
     e.stopPropagation();
     e.preventDefault();
