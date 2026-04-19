@@ -1,3 +1,10 @@
+// TODO config for each client
+const liveUrl = "https://glossa.live/unu-unu/";
+
+if (window.location.href.startsWith(liveUrl)) {
+  document.body.classList.add("glossa-live-improvements-extension");
+}
+
 document.body.addEventListener("contextmenu", e => {
   const content = e.target.closest("div.bg-white");
   if (content) {
