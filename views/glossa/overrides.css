@@ -8,6 +8,12 @@
   --glossa-override-button-border: #735729;
 }
 
+/* Simple Prompt Overrides */
+
+#custom-prompt {
+  min-width: 450px;
+}
+
 /* Overrides for Glossa - page before fullscreen */
 
 body.glossa-live-improvements-extension .bg-white {
