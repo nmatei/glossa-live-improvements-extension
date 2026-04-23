@@ -51,7 +51,7 @@ body.glossa-live-improvements-extension .bg-orange-100\/50 {
 
 body.glossa-live-improvements-extension .bg-white:fullscreen {
   background: var(--glossa-override-bg) !important;
-  font-size: 1.2rem !important;
+  font-size: 1.5rem !important;
 }
 
 body.glossa-live-improvements-extension .bg-white:fullscreen .overflow-y-auto {
@@ -60,13 +60,13 @@ body.glossa-live-improvements-extension .bg-white:fullscreen .overflow-y-auto {
 
 body.glossa-live-improvements-extension .bg-white:fullscreen p.text-2xl {
   color: var(--glossa-override-text) !important;
-  font-size: 2.5rem;
-  line-height: 3rem !important;
+  font-size: 3.5rem !important;
+  line-height: 4.2rem !important;
 }
 
 body.glossa-live-improvements-extension .bg-white:fullscreen .dark\:text-gray-500:is(.dark *) {
   color: var(--glossa-override-text-secondary) !important;
-  font-size: 0.7rem !important;
+  font-size: 0.8rem !important;
 }
 
 body.glossa-live-improvements-extension .bg-white:fullscreen .mb-0\.5 {
