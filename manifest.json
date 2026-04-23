@@ -11,11 +11,15 @@
   "permissions": ["activeTab", "storage", "clipboardWrite"],
   "content_scripts": [
     {
-      "matches": [
-        "https://glossa.live/*"
-      ],
+      "matches": ["https://glossa.live/*"],
       "js": ["views/icons/icons.js", "views/common/utilities.js", "views/common/tooltip/tooltip.js", "views/common/simplePrompt/simplePrompt.js"],
-      "css": ["views/common/colors.css", "views/common/tooltip/tooltip.css", "views/common/simplePrompt/simplePrompt.css", "views/common/actions.css"],
+      "css": [
+        "views/common/colors.css",
+        "views/common/tooltip/tooltip.css",
+        "views/common/simplePrompt/simplePrompt.css",
+        "views/common/actions.css",
+        "views/common/CustomScrollChrome.css"
+      ],
       "run_at": "document_end"
     },
     {

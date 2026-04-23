@@ -3,6 +3,7 @@
 :root {
   --glossa-override-bg: #82663a;
   --glossa-override-active-bg: #846635;
+  --glossa-override-bg-hover: #75541f;
   --glossa-override-text: #ffffff;
   --glossa-override-text-secondary: #ffffffae;
   --glossa-override-button-border: #735729;
@@ -36,6 +37,14 @@ body.glossa-live-improvements-extension .bg-gray-100 {
 body.glossa-live-improvements-extension .border-gray-200,
 body.glossa-live-improvements-extension .border-gray-300 {
   border-color: var(--glossa-override-button-border);
+}
+
+body.glossa-live-improvements-extension .hover\:bg-gray-50:hover {
+  background-color: var(--glossa-override-bg-hover) !important;
+}
+/* Live Playing box */
+body.glossa-live-improvements-extension .bg-orange-100\/50 {
+  background-color: var(--glossa-override-bg-hover) !important;
 }
 
 /*  Fullscreen MODE : Light Mode */
