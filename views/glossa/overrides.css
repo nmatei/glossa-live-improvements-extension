@@ -47,6 +47,14 @@ body.glossa-live-improvements-extension .bg-orange-100\/50 {
   background-color: var(--glossa-override-bg-hover) !important;
 }
 
+/* for : show original text */
+body.glossa-live-improvements-extension .text-gray-500 {
+  color: var(--glossa-override-text-secondary);
+}
+body.glossa-live-improvements-extension .group:hover .group-hover\:text-gray-600 {
+  color: var(--glossa-override-text-secondary);
+}
+
 /*  Fullscreen MODE : Light Mode */
 
 body.glossa-live-improvements-extension .bg-white:fullscreen {
