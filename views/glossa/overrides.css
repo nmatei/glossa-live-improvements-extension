@@ -47,6 +47,10 @@ body.glossa-live-improvements-extension .bg-orange-100\/50 {
   background-color: var(--glossa-override-bg-hover) !important;
 }
 
+/* for : time and date */
+body.glossa-live-improvements-extension .text-gray-400 {
+  color: var(--glossa-override-text-secondary);
+}
 /* for : show original text */
 body.glossa-live-improvements-extension .text-gray-500 {
   color: var(--glossa-override-text-secondary);
