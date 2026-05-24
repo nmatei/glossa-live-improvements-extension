@@ -7,8 +7,12 @@
   "background": {
     "service_worker": "views/background.js"
   },
-  "action": {},
-  "permissions": ["activeTab", "storage", "clipboardWrite"],
+  "action": {
+    "default_popup": "views/popup/popup.html",
+    "default_title": "Glossa.live Controls"
+  },
+  "permissions": ["activeTab", "storage", "clipboardWrite", "tabs", "scripting"],
+  "host_permissions": ["https://glossa.live/*"],
   "content_scripts": [
     {
       "matches": ["https://glossa.live/*"],

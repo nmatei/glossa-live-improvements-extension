@@ -43,11 +43,23 @@ async function initEvents() {
   const liveUrl = await getLiveUrl();
   if (window.location.href.startsWith(liveUrl)) {
     document.body.classList.add("glossa-live-improvements-extension");
+
+    // Restore play state after a popup-triggered refresh
+    const { shouldAutoPlay } = await chrome.storage.sync.get("shouldAutoPlay");
+    if (shouldAutoPlay) {
+      await chrome.storage.sync.set({ shouldAutoPlay: false }); // consume the flag
+      const playBtn = await waitElement('button[title="Play"]', 10000, 250);
+      if (playBtn) {
+        playBtn.click();
+      }
+    }
   }
 
   document.body.addEventListener("contextmenu", e => {
-    const content = e.target.closest("div.bg-white");
-    if (content) {
+    const content = [...document.querySelectorAll("div.bg-white")].find(
+      div => div.firstElementChild?.matches("div.overflow-y-auto")
+    );
+    if (content && content.contains(e.target)) {
       e.stopPropagation();
       e.preventDefault();
 

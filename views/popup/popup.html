@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Glossa.live Controls</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup">
+      <div class="popup-header">
+        <img src="../icons/icon-48.png" width="24" height="24" alt="Glossa" />
+        <span class="header-title">Glossa.live</span>
+      </div>
+
+      <div class="popup-grid">
+        <button id="btn-play-pause" class="popup-btn" title="Play / Pause">
+          <span class="btn-icon" id="icon-play-pause"></span>
+          <span class="btn-label" id="label-play-pause">Play</span>
+        </button>
+
+        <button id="btn-mute" class="popup-btn" title="Mute / Unmute">
+          <span class="btn-icon" id="icon-mute"></span>
+          <span class="btn-label" id="label-mute">Mute</span>
+        </button>
+
+        <button id="btn-refresh" class="popup-btn" title="Refresh page (restores play state)">
+          <span class="btn-icon" id="icon-refresh"></span>
+          <span class="btn-label">Refresh</span>
+        </button>
+
+        <button id="btn-fullscreen" class="popup-btn" title="Fullscreen">
+          <span class="btn-icon" id="icon-fullscreen"></span>
+          <span class="btn-label">Fullscreen</span>
+        </button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

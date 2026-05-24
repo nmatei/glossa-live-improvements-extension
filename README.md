@@ -24,3 +24,7 @@ If you want to try to install it as Developer
   - [x] Activate `Developer mode`
 - [x] **Load unpacked** Extension
 - [x] Select `glossa-live-improvements-extension` folder
+
+## TODOs
+
+- [ ] aria-label="Scroll to latest" - when this button appears, scroll to the latest caption automatically.
