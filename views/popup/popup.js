@@ -33,6 +33,25 @@ const ICONS = {
     <polyline points="9,21 3,21 3,15"/>
     <line x1="21" y1="3" x2="14" y2="10"/>
     <line x1="3" y1="21" x2="10" y2="14"/>
+  </svg>`,
+
+  restore: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+    <polyline points="8,3 3,3 3,8"/>
+    <polyline points="16,21 21,21 21,16"/>
+    <line x1="3" y1="3" x2="10" y2="10"/>
+    <line x1="21" y1="21" x2="14" y2="14"/>
+  </svg>`,
+
+  website: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="2" y1="12" x2="22" y2="12"/>
+    <path d="M12,2 a15.3,15.3 0 0 1 4,10 a15.3,15.3 0 0 1 -4,10 a15.3,15.3 0 0 1 -4,-10 a15.3,15.3 0 0 1 4,-10z"/>
+  </svg>`,
+
+  openLive: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+    <polyline points="15,3 21,3 21,9"/>
+    <line x1="10" y1="14" x2="21" y2="3"/>
   </svg>`
 };
 
@@ -66,11 +85,28 @@ setIcon("icon-play-pause", "play");
 setIcon("icon-mute", "mute");
 setIcon("icon-refresh", "refresh");
 setIcon("icon-fullscreen", "fullscreen");
+setIcon("icon-website", "website");
+setIcon("icon-open-live", "openLive");
 
 // ── Storage helpers ────────────────────────────────────────────────────────
 async function getLiveUrl() {
   const { liveUrl } = await chrome.storage.sync.get("liveUrl");
   return liveUrl || null;
+}
+
+// ── Focus-or-open a URL ────────────────────────────────────────────────────
+async function focusOrOpen(url) {
+  try {
+    const tabs = await chrome.tabs.query({ url: url.endsWith("*") ? url : url + "*" });
+    if (tabs.length) {
+      await chrome.tabs.update(tabs[0].id, { active: true });
+      await chrome.windows.update(tabs[0].windowId, { focused: true });
+    } else {
+      await chrome.tabs.create({ url });
+    }
+  } catch (e) {
+    console.error("focusOrOpen:", e);
+  }
 }
 
 // ── Tab helpers ────────────────────────────────────────────────────────────
@@ -142,9 +178,18 @@ function applyState(state) {
 async function init() {
   const liveUrl = await getLiveUrl();
 
+  // These two buttons always work regardless of live tab state
+  $("btn-website").addEventListener("click", () => focusOrOpen("https://glossa.live/"));
+  if (liveUrl) {
+    $("btn-open-live").addEventListener("click", () => focusOrOpen(liveUrl));
+  } else {
+    $("btn-open-live").disabled = true;
+  }
+
   if (!liveUrl) {
     showStatus("No Live URL configured — open Glossa.live first.", "error");
     setButtonsDisabled(true);
+    $("btn-website").disabled = false;
     return;
   }
 
@@ -153,6 +198,8 @@ async function init() {
   if (!tabs.length) {
     showStatus("No matching Glossa.live tab found.", "error");
     setButtonsDisabled(true);
+    $("btn-website").disabled = false;
+    $("btn-open-live").disabled = false;
     return;
   }
 
@@ -205,16 +252,35 @@ async function init() {
     showStatus("Refreshing…", "info");
   });
 
-  // ── Fullscreen ────────────────────────────────────────────────────────
-  $("btn-fullscreen").addEventListener("click", async () => {
-    for (const tab of tabs) {
-      await execInTab(tab.id, () => {
-        const el = [...document.querySelectorAll("div.bg-white")].find(
-          div => div.firstElementChild?.matches("div.overflow-y-auto")
-        );
-        el?.requestFullscreen?.();
-      });
+  // ── Fullscreen / Restore ──────────────────────────────────────────────
+  async function syncFullscreenBtn() {
+    const isFs = await execInTab(tabs[0].id, () => !!document.fullscreenElement);
+    if (isFs) {
+      setIcon("icon-fullscreen", "restore");
+      $("label-fullscreen").textContent = "Restore";
+    } else {
+      setIcon("icon-fullscreen", "fullscreen");
+      $("label-fullscreen").textContent = "Fullscreen";
     }
+  }
+
+  await syncFullscreenBtn();
+
+  $("btn-fullscreen").addEventListener("click", async () => {
+    const isFs = await execInTab(tabs[0].id, () => !!document.fullscreenElement);
+    if (isFs) {
+      await execInTab(tabs[0].id, () => document.exitFullscreen?.());
+    } else {
+      for (const tab of tabs) {
+        await execInTab(tab.id, () => {
+          const el = [...document.querySelectorAll("div.bg-white")].find(
+            div => div.firstElementChild?.matches("div.overflow-y-auto")
+          );
+          el?.requestFullscreen?.();
+        });
+      }
+    }
+    setTimeout(syncFullscreenBtn, 300);
   });
 }
 

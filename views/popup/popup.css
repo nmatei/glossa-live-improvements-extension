@@ -104,7 +104,22 @@ body {
   white-space: nowrap;
 }
 
+/* ── Links section (shown when no live tab is found) ── */
+.popup-links {
+  padding-bottom: 4px;
+}
+
+.links-separator {
+  border: none;
+  border-top: 1px solid #e1e7eb;
+  margin: 0;
+}
+
 /* ── Status bar ── */
+.status:empty {
+  display: none;
+}
+
 .status {
   min-height: 24px;
   font-size: 11px;
