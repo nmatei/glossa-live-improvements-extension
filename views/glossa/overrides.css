@@ -90,4 +90,9 @@ body.glossa-live-improvements-extension .bg-white:fullscreen .dark\:bg-orange-90
   background: var(--glossa-override-active-bg) !important;
 }
 
+/* Last group highlighted when audio not started */
+body.glossa-live-improvements-extension.audio-not-started .overflow-y-auto > div.group:last-child {
+  background: var(--glossa-override-bg-hover) !important;
+}
+
 /* TODO - Fullscreen MODE : Dark Mode */

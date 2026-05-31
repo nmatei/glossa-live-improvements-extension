@@ -55,6 +55,7 @@ async function initEvents() {
     }
 
     initAutoScroll();
+    initAudioState();
   }
 
   document.body.addEventListener("contextmenu", e => {
@@ -68,6 +69,33 @@ async function initEvents() {
       showContextMenu(content, e);
     }
   });
+}
+
+function initAudioState() {
+  function updateAudioClass() {
+    const muteBtn = document.querySelector('button[title="Mute"]');
+    const unmuteBtn = document.querySelector('button[title="Unmute"]');
+    // Only update if the mute/unmute button is actually present
+    if (muteBtn || unmuteBtn) {
+      document.body.classList.toggle("audio-not-started", !muteBtn);
+    }
+  }
+
+  // Apply after load settles, in case the button renders late
+  setTimeout(updateAudioClass, 2000);
+
+  // Toggle immediately on click of Mute/Unmute button
+  document.body.addEventListener("click", e => {
+    const btn = e.target.closest('button[title="Mute"], button[title="Unmute"]');
+    if (btn) {
+      // Title reflects state before click, so invert
+      const willBeAudioOn = btn.title === "Unmute";
+      document.body.classList.toggle("audio-not-started", !willBeAudioOn);
+    }
+  });
+
+  const observer = new MutationObserver(updateAudioClass);
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["title"] });
 }
 
 function initAutoScroll() {
