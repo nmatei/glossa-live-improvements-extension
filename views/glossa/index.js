@@ -53,6 +53,8 @@ async function initEvents() {
         playBtn.click();
       }
     }
+
+    initAutoScroll();
   }
 
   document.body.addEventListener("contextmenu", e => {
@@ -66,6 +68,28 @@ async function initEvents() {
       showContextMenu(content, e);
     }
   });
+}
+
+function initAutoScroll() {
+  let scrollTimer = null;
+
+  const observer = new MutationObserver(() => {
+    const btn = document.querySelector('button[aria-label="Scroll to latest"]');
+    if (btn && !scrollTimer) {
+      scrollTimer = setTimeout(() => {
+        const current = document.querySelector('button[aria-label="Scroll to latest"]');
+        if (current) {
+          current.click();
+        }
+        scrollTimer = null;
+      }, 2000);
+    } else if (!btn && scrollTimer) {
+      clearTimeout(scrollTimer);
+      scrollTimer = null;
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-label"] });
 }
 
 initEvents();
