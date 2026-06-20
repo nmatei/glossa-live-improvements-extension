@@ -52,6 +52,16 @@ const ICONS = {
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
     <polyline points="15,3 21,3 21,9"/>
     <line x1="10" y1="14" x2="21" y2="3"/>
+  </svg>`,
+
+  // settings (sliders) icon — borrowed from the chrome-bible-utilities extension
+  settings: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5,3V17M12,7V21m7-7v7m0-11V3" stroke="currentColor"/>
+    <path d="M5,17a2,2,0,1,0,2,2A2,2,0,0,0,5,17ZM12,3a2,2,0,1,0,2,2A2,2,0,0,0,12,3Zm7,7a2,2,0,1,0,2,2A2,2,0,0,0,19,10Z" stroke="#2ca9bc"/>
+  </svg>`,
+
+  chevron: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+    <polyline points="9,6 15,12 9,18"/>
   </svg>`
 };
 
@@ -87,6 +97,12 @@ setIcon("icon-refresh", "refresh");
 setIcon("icon-fullscreen", "fullscreen");
 setIcon("icon-website", "website");
 setIcon("icon-open-live", "openLive");
+setIcon("icon-settings", "settings");
+setIcon("icon-chevron", "chevron");
+setIcon("icon-change-live-url", "openLive");
+
+// ── Constants ────────────────────────────────────────────────────────────
+const MAIN_URL = "https://glossa.live/";
 
 // ── Storage helpers ────────────────────────────────────────────────────────
 async function getLiveUrl() {
@@ -94,10 +110,9 @@ async function getLiveUrl() {
   return liveUrl || null;
 }
 
-// ── Focus-or-open a URL ────────────────────────────────────────────────────
-async function focusOrOpen(url) {
+// ── Focus an existing tab, or open the URL if none ──────────────────────────
+async function focusTabsOrOpen(tabs, url) {
   try {
-    const tabs = await chrome.tabs.query({ url: url.endsWith("*") ? url : url + "*" });
     if (tabs.length) {
       await chrome.tabs.update(tabs[0].id, { active: true });
       await chrome.windows.update(tabs[0].windowId, { focused: true });
@@ -105,11 +120,23 @@ async function focusOrOpen(url) {
       await chrome.tabs.create({ url });
     }
   } catch (e) {
-    console.error("focusOrOpen:", e);
+    console.error("focusTabsOrOpen:", e);
   }
 }
 
 // ── Tab helpers ────────────────────────────────────────────────────────────
+// "Main" = any glossa.live tab that is NOT the configured live page (e.g. the
+// home page, /admin, …). The live page belongs to the Open Live button instead.
+async function findMainTabs(liveUrl) {
+  try {
+    const allTabs = await chrome.tabs.query({ url: "https://glossa.live/*" });
+    return liveUrl ? allTabs.filter(tab => !(tab.url && tab.url.startsWith(liveUrl))) : allTabs;
+  } catch (e) {
+    console.error("findMainTabs:", e);
+    return [];
+  }
+}
+
 async function findLiveTabs(liveUrl) {
   if (!liveUrl) return [];
   try {
@@ -175,13 +202,40 @@ function applyState(state) {
 }
 
 // ── Main init ──────────────────────────────────────────────────────────────
+function setDot(dotElId, open) {
+  $(dotElId).classList.toggle("open", open);
+}
+
 async function init() {
   const liveUrl = await getLiveUrl();
 
-  // These two buttons always work regardless of live tab state
-  $("btn-website").addEventListener("click", () => focusOrOpen("https://glossa.live/"));
+  // ── Settings: Change Live URL ─────────────────────────────────────────
+  // Available regardless of whether a live tab is open.
+  $("input-live-url").value = liveUrl || "";
+  $("btn-change-live-url").addEventListener("click", async () => {
+    const url = $("input-live-url").value.trim();
+    if (!url) {
+      showStatus("Enter a valid Live URL.", "error");
+      return;
+    }
+    await chrome.storage.sync.set({ liveUrl: url });
+    showStatus("Live URL saved — reopen the popup to use it.", "info");
+  });
+
+  // Link dots: green when the corresponding page is already open.
+  const mainTabs = await findMainTabs(liveUrl);
+  setDot("dot-website", mainTabs.length > 0);
+  $("btn-website").title = (mainTabs.length ? "Focus" : "Open") + " Glossa.live website";
+
+  // Main-site button: focuses any non-live glossa.live tab, else opens the home page.
+  $("btn-website").addEventListener("click", () => focusTabsOrOpen(mainTabs, MAIN_URL));
+
+  const tabs = liveUrl ? await findLiveTabs(liveUrl) : [];
+
   if (liveUrl) {
-    $("btn-open-live").addEventListener("click", () => focusOrOpen(liveUrl));
+    setDot("dot-open-live", tabs.length > 0);
+    $("btn-open-live").title = (tabs.length ? "Focus" : "Open") + " your live page";
+    $("btn-open-live").addEventListener("click", () => focusTabsOrOpen(tabs, liveUrl));
   } else {
     $("btn-open-live").disabled = true;
   }
@@ -189,17 +243,12 @@ async function init() {
   if (!liveUrl) {
     showStatus("No Live URL configured — open Glossa.live first.", "error");
     setButtonsDisabled(true);
-    $("btn-website").disabled = false;
     return;
   }
-
-  const tabs = await findLiveTabs(liveUrl);
 
   if (!tabs.length) {
     showStatus("No matching Glossa.live tab found.", "error");
     setButtonsDisabled(true);
-    $("btn-website").disabled = false;
-    $("btn-open-live").disabled = false;
     return;
   }
 

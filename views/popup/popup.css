@@ -8,32 +8,12 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   background: #ffffff;
   color: #333333;
-  width: 220px;
+  width: 320px;
 }
 
 .popup {
   display: flex;
   flex-direction: column;
-}
-
-/* ── Header ── */
-.popup-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px 8px;
-  border-bottom: 1px solid #e1e7eb;
-}
-
-.popup-header img {
-  border-radius: 4px;
-}
-
-.header-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #2ca9bc;
-  letter-spacing: 0.01em;
 }
 
 /* ── Button grid ── */
@@ -104,15 +84,193 @@ body {
   white-space: nowrap;
 }
 
-/* ── Links section (shown when no live tab is found) ── */
+/* ── Top link buttons (compact, icon inline, with status dot) ── */
 .popup-links {
-  padding-bottom: 4px;
+  padding: 10px 10px 0;
+}
+
+.popup-links-row {
+  display: flex;
+  gap: 6px;
+}
+
+.popup-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid #e1e7eb;
+  border-radius: 6px;
+  background: #f8fafb;
+  color: #333333;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.popup-link:hover:not(:disabled) {
+  background: #e5f2f2;
+  border-color: #2ca9bc;
+  color: #1a8a9c;
+}
+
+.popup-link:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.popup-link .btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: #2ca9bc;
+}
+
+.popup-link .btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.popup-link:hover:not(:disabled) .btn-icon {
+  color: #1a8a9c;
+}
+
+.popup-link .btn-label {
+  font-size: 12px;
+}
+
+/* status dot: gray = page not open, green = open (same colors as norless) */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa0ad;
+  flex: none;
+}
+
+.dot.open {
+  background: #2ecc71;
 }
 
 .links-separator {
   border: none;
   border-top: 1px solid #e1e7eb;
-  margin: 0;
+  margin: 10px 0 0;
+}
+
+/* ── Expandable settings (Change Live URL) ── */
+.popup-settings {
+  margin: 0 10px 10px;
+  border: 1px solid #e1e7eb;
+  border-radius: 8px;
+  background: #f8fafb;
+}
+
+.popup-settings summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333333;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.popup-settings summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-summary-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-summary-label .btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.popup-settings summary .chevron {
+  flex: none;
+  display: flex;
+  align-items: center;
+  color: #9aa0ad;
+  transition: transform 0.15s ease;
+}
+
+.popup-settings[open] summary .chevron {
+  transform: rotate(90deg);
+}
+
+.settings-body {
+  padding: 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #666666;
+}
+
+.settings-input {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid #e1e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: #2ca9bc;
+}
+
+.settings-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 9px;
+  border: 1px solid #2ca9bc;
+  border-radius: 6px;
+  background: #e5f2f2;
+  color: #1a8a9c;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.settings-save:hover {
+  background: #d4ebec;
+}
+
+.settings-save .btn-icon {
+  width: 16px;
+  height: 16px;
+  color: #1a8a9c;
+}
+
+.settings-save .btn-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* ── Status bar ── */

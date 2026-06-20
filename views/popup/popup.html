@@ -7,9 +7,20 @@
   </head>
   <body>
     <div class="popup">
-      <div class="popup-header">
-        <img src="../icons/icon-48.png" width="24" height="24" alt="Glossa" />
-        <span class="header-title">Glossa.live</span>
+      <div id="section-links" class="popup-links">
+        <div class="popup-links-row">
+          <button id="btn-website" class="popup-link" title="Open Glossa.live website">
+            <span class="dot" id="dot-website"></span>
+            <span class="btn-icon" id="icon-website"></span>
+            <span class="btn-label">Glossa.live</span>
+          </button>
+          <button id="btn-open-live" class="popup-link" title="Open your live page">
+            <span class="dot" id="dot-open-live"></span>
+            <span class="btn-icon" id="icon-open-live"></span>
+            <span class="btn-label">Open Live</span>
+          </button>
+        </div>
+        <hr class="links-separator" />
       </div>
 
       <div class="popup-grid">
@@ -34,21 +45,30 @@
         </button>
       </div>
 
-      <div id="status" class="status"></div>
-
-      <div id="section-links" class="popup-links">
-        <hr class="links-separator" />
-        <div class="popup-grid">
-          <button id="btn-website" class="popup-btn" title="Open Glossa.live website">
-            <span class="btn-icon" id="icon-website"></span>
-            <span class="btn-label">Glossa.live</span>
-          </button>
-          <button id="btn-open-live" class="popup-btn" title="Open your live page">
-            <span class="btn-icon" id="icon-open-live"></span>
-            <span class="btn-label">Open Live</span>
+      <details id="section-settings" class="popup-settings">
+        <summary>
+          <span class="settings-summary-label">
+            <span class="btn-icon" id="icon-settings"></span>
+            <span>Settings</span>
+          </span>
+          <span class="chevron" id="icon-chevron"></span>
+        </summary>
+        <div class="settings-body">
+          <label for="input-live-url" class="settings-label">Live URL</label>
+          <input
+            id="input-live-url"
+            type="url"
+            class="settings-input"
+            placeholder="https://glossa.live/..."
+          />
+          <button id="btn-change-live-url" class="settings-save" title="Save the live page URL">
+            <span class="btn-icon" id="icon-change-live-url"></span>
+            <span class="btn-label">Change Live URL</span>
           </button>
         </div>
-      </div>
+      </details>
+
+      <div id="status" class="status"></div>
     </div>
 
     <script src="popup.js"></script>
