@@ -10,15 +10,44 @@ function setIcon(iconElId, svgKey) {
   $(iconElId).innerHTML = icons[svgKey];
 }
 
+// The footer always shows a persistent "base" status reflecting page state.
+// Transient messages (Refreshing…, saved, validation errors) override it for a
+// few seconds, then it reverts to the base.
+// dot: "live" (green, pulsing) | "idle" (gray) | "off" (hidden)
+let baseStatus = { msg: "", type: "", dot: "off" };
+let statusTimer = null;
+
+function paintStatus(msg, type, dot) {
+  $("status").textContent = msg;
+  $("status").className = "status" + (type ? " " + type : "");
+  $("status-dot").className = "status-dot" + (dot === "off" ? " hidden" : " " + dot);
+  $("popup-footer").classList.toggle("error", type === "error");
+}
+
+function setBaseStatus(msg, type = "", dot = "off") {
+  baseStatus = { msg, type, dot };
+  clearTimeout(statusTimer);
+  paintStatus(msg, type, dot);
+}
+
 function showStatus(msg, type = "") {
-  const el = $("status");
-  el.textContent = msg;
-  el.className = "status" + (type ? " " + type : "");
-  if (msg && type !== "error") {
-    setTimeout(() => {
-      el.textContent = "";
-      el.className = "status";
-    }, 3000);
+  // Transient errors hide the live dot; other transient messages keep the base dot.
+  paintStatus(msg, type, type === "error" ? "off" : baseStatus.dot);
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => paintStatus(baseStatus.msg, baseStatus.type, baseStatus.dot), 3000);
+}
+
+// Reflect play/mute state as the persistent footer message.
+function updateLiveStatus(state) {
+  if (!state) return;
+  if (state.isPlaying) {
+    setBaseStatus(
+      state.isMuted ? "Listening… (audio muted)" : "Listening… live captions are running.",
+      "info",
+      "live"
+    );
+  } else {
+    setBaseStatus("Press Play to start, then Fullscreen to cast.", "", "idle");
   }
 }
 
@@ -137,6 +166,9 @@ function applyState(state) {
     $("label-mute").textContent = "Mute";
     muteBtn.classList.remove("active");
   }
+
+  // Keep the footer in sync with play/mute state
+  updateLiveStatus(state);
 }
 
 // ── Main init ──────────────────────────────────────────────────────────────
@@ -179,20 +211,24 @@ async function init() {
   }
 
   if (!liveUrl) {
-    showStatus("No Live URL configured — open Glossa.live first.", "error");
+    setBaseStatus("No Live URL configured — open Glossa.live first.", "error", "off");
     setButtonsDisabled(true);
     return;
   }
 
   if (!tabs.length) {
-    showStatus("No matching Glossa.live tab found.", "error");
+    setBaseStatus("No matching Glossa.live tab found.", "error", "off");
     setButtonsDisabled(true);
     return;
   }
 
   // Read initial page state
   const state = await getTabState(tabs[0].id);
-  applyState(state);
+  if (state) {
+    applyState(state);
+  } else {
+    setBaseStatus("Connecting to your live page…", "info", "idle");
+  }
 
   // ── Play / Pause ──────────────────────────────────────────────────────
   $("btn-play-pause").addEventListener("click", async () => {
@@ -227,18 +263,6 @@ async function init() {
     setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);
   });
 
-  // ── Refresh ───────────────────────────────────────────────────────────
-  $("btn-refresh").addEventListener("click", async () => {
-    const st = await getTabState(tabs[0].id);
-    // Persist current play state — content script will restore it on reload
-    await chrome.storage.sync.set({ shouldAutoPlay: st?.isPlaying ?? false });
-
-    for (const tab of tabs) {
-      await chrome.tabs.reload(tab.id);
-    }
-    showStatus("Refreshing…", "info");
-  });
-
   // ── Fullscreen / Restore ──────────────────────────────────────────────
   async function syncFullscreenBtn() {
     const isFs = await execInTab(tabs[0].id, () => !!document.fullscreenElement);
@@ -251,6 +275,41 @@ async function init() {
     }
   }
 
+  // Enter fullscreen on the captions container. Injected via executeScript so it
+  // runs with the popup's user activation (a declarative content script can't).
+  // Waits briefly for the container in case the page is still settling.
+  async function enterFullscreen(tabId) {
+    await execInTab(tabId, async () => {
+      const findContent = () =>
+        [...document.querySelectorAll("div.bg-white")].find(
+          div => div.firstElementChild?.matches("div.overflow-y-auto")
+        );
+      let el = findContent();
+      const end = Date.now() + 8000;
+      while (!el && Date.now() < end) {
+        await new Promise(r => setTimeout(r, 200));
+        el = findContent();
+      }
+      el?.requestFullscreen?.();
+    });
+  }
+
+  // Resolve once the tab reports "complete" (or after a short timeout).
+  function waitTabComplete(tabId, timeout = 8000) {
+    return new Promise(resolve => {
+      const finish = () => {
+        chrome.tabs.onUpdated.removeListener(listener);
+        clearTimeout(timer);
+        resolve();
+      };
+      const listener = (id, info) => {
+        if (id === tabId && info.status === "complete") finish();
+      };
+      chrome.tabs.onUpdated.addListener(listener);
+      const timer = setTimeout(finish, timeout);
+    });
+  }
+
   await syncFullscreenBtn();
 
   $("btn-fullscreen").addEventListener("click", async () => {
@@ -259,15 +318,38 @@ async function init() {
       await execInTab(tabs[0].id, () => document.exitFullscreen?.());
     } else {
       for (const tab of tabs) {
-        await execInTab(tab.id, () => {
-          const el = [...document.querySelectorAll("div.bg-white")].find(
-            div => div.firstElementChild?.matches("div.overflow-y-auto")
-          );
-          el?.requestFullscreen?.();
-        });
+        await enterFullscreen(tab.id);
       }
     }
     setTimeout(syncFullscreenBtn, 300);
+  });
+
+  // ── Refresh ───────────────────────────────────────────────────────────
+  $("btn-refresh").addEventListener("click", async () => {
+    const st = await getTabState(tabs[0].id);
+    const wasFs = await execInTab(tabs[0].id, () => !!document.fullscreenElement);
+    // Persist play + mute — the content script restores them once the page reloads
+    await chrome.storage.sync.set({
+      shouldAutoPlay: st?.isPlaying ?? false,
+      shouldMute: st?.isMuted ?? false
+    });
+
+    showStatus("Refreshing…", "info");
+
+    for (const tab of tabs) {
+      await chrome.tabs.reload(tab.id);
+    }
+
+    // Fullscreen can't be restored from the content script (no user gesture),
+    // so re-enter it here once the reload finishes — this injection keeps the
+    // popup's user activation, like clicking the Fullscreen button again.
+    if (wasFs) {
+      for (const tab of tabs) {
+        await waitTabComplete(tab.id);
+        await enterFullscreen(tab.id);
+      }
+      setTimeout(syncFullscreenBtn, 300);
+    }
   });
 }
 

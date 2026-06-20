@@ -44,15 +44,8 @@ async function initEvents() {
   if (window.location.href.startsWith(liveUrl)) {
     document.body.classList.add("glossa-live-improvements-extension");
 
-    // Restore play state after a popup-triggered refresh
-    const { shouldAutoPlay } = await chrome.storage.sync.get("shouldAutoPlay");
-    if (shouldAutoPlay) {
-      await chrome.storage.sync.set({ shouldAutoPlay: false }); // consume the flag
-      const playBtn = await waitElement('button[title="Play"]', 10000, 250);
-      if (playBtn) {
-        playBtn.click();
-      }
-    }
+    // Restore the page state after a popup-triggered refresh
+    await restoreStateAfterRefresh();
 
     initAutoScroll();
     initAudioState();
@@ -69,6 +62,32 @@ async function initEvents() {
       showContextMenu(content, e);
     }
   });
+}
+
+// Restore play / mute state after a popup-triggered refresh. The flags are
+// written by the popup's Refresh button and consumed once here.
+// (Fullscreen is restored by the popup itself — a declarative content script
+// has no user activation, so requestFullscreen would be blocked here.)
+async function restoreStateAfterRefresh() {
+  const { shouldAutoPlay, shouldMute } = await chrome.storage.sync.get(["shouldAutoPlay", "shouldMute"]);
+
+  // Consume the flags so a manual reload doesn't replay them
+  await chrome.storage.sync.set({ shouldAutoPlay: false, shouldMute: false });
+
+  // Play — click Play once it renders
+  if (shouldAutoPlay) {
+    const playBtn = await waitElement('button[title="Play"]', 10000, 250);
+    playBtn?.click();
+  }
+
+  // Mute — the Mute/Unmute control only appears once audio has started.
+  // title="Mute" → currently unmuted; title="Unmute" → currently muted.
+  if (shouldMute) {
+    const audioBtn = await waitElement('button[title="Mute"], button[title="Unmute"]', 10000, 250);
+    if (audioBtn && audioBtn.title === "Mute") {
+      audioBtn.click();
+    }
+  }
 }
 
 function initAudioState() {
