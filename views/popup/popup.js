@@ -1,75 +1,13 @@
 // ── SVG icons ─────────────────────────────────────────────────────────────
-const ICONS = {
-  play: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="6,3 20,12 6,21" fill="currentColor"/>
-  </svg>`,
-
-  pause: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="5" y="3" width="4" height="18" rx="1" fill="currentColor"/>
-    <rect x="15" y="3" width="4" height="18" rx="1" fill="currentColor"/>
-  </svg>`,
-
-  mute: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
-    <path d="M15,9.5 a5,5 0 0 1 0,5" stroke="currentColor"/>
-    <path d="M18,7 a9,9 0 0 1 0,10" stroke="currentColor"/>
-  </svg>`,
-
-  unmute: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" fill="currentColor" stroke="none"/>
-    <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor"/>
-    <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor"/>
-  </svg>`,
-
-  refresh: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14,18H9A6,6,0,0,1,5.54,7.11"/>
-    <path d="M10,6h5a6,6,0,0,1,3.46,10.89"/>
-    <polyline points="12,16 14,18 12,20" stroke="#2ca9bc"/>
-    <polyline points="12,8 10,6 12,4" stroke="#2ca9bc"/>
-  </svg>`,
-
-  fullscreen: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <polyline points="15,3 21,3 21,9"/>
-    <polyline points="9,21 3,21 3,15"/>
-    <line x1="21" y1="3" x2="14" y2="10"/>
-    <line x1="3" y1="21" x2="10" y2="14"/>
-  </svg>`,
-
-  restore: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <polyline points="8,3 3,3 3,8"/>
-    <polyline points="16,21 21,21 21,16"/>
-    <line x1="3" y1="3" x2="10" y2="10"/>
-    <line x1="21" y1="21" x2="14" y2="14"/>
-  </svg>`,
-
-  website: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10"/>
-    <line x1="2" y1="12" x2="22" y2="12"/>
-    <path d="M12,2 a15.3,15.3 0 0 1 4,10 a15.3,15.3 0 0 1 -4,10 a15.3,15.3 0 0 1 -4,-10 a15.3,15.3 0 0 1 4,-10z"/>
-  </svg>`,
-
-  openLive: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-    <polyline points="15,3 21,3 21,9"/>
-    <line x1="10" y1="14" x2="21" y2="3"/>
-  </svg>`,
-
-  // settings (sliders) icon — borrowed from the chrome-bible-utilities extension
-  settings: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5,3V17M12,7V21m7-7v7m0-11V3" stroke="currentColor"/>
-    <path d="M5,17a2,2,0,1,0,2,2A2,2,0,0,0,5,17ZM12,3a2,2,0,1,0,2,2A2,2,0,0,0,12,3Zm7,7a2,2,0,1,0,2,2A2,2,0,0,0,19,10Z" stroke="#2ca9bc"/>
-  </svg>`,
-
-  chevron: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <polyline points="9,6 15,12 9,18"/>
-  </svg>`
-};
+// Icons live in the shared views/icons/icons.js library (loaded before this
+// script) so they can be reused across the extension. `chevron` maps to the
+// library's `rightArrow` (rotated via CSS when the settings section is open).
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
 function setIcon(iconElId, svgKey) {
-  $(iconElId).innerHTML = ICONS[svgKey];
+  $(iconElId).innerHTML = icons[svgKey];
 }
 
 function showStatus(msg, type = "") {
@@ -98,7 +36,7 @@ setIcon("icon-fullscreen", "fullscreen");
 setIcon("icon-website", "website");
 setIcon("icon-open-live", "openLive");
 setIcon("icon-settings", "settings");
-setIcon("icon-chevron", "chevron");
+setIcon("icon-chevron", "rightArrow");
 setIcon("icon-change-live-url", "openLive");
 
 // ── Constants ────────────────────────────────────────────────────────────

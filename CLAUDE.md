@@ -1,4 +1,4 @@
-# chrome-bible-utilities/chrome-bible-utilities for Glossa.live Projector Cast Extension
+# AI Agents Instructions for Glossa.live Projector Cast Extension
 
 ## IDE Rules Sync
 

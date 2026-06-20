@@ -1,12 +1,12 @@
-# Copilot Instructions for Glossa.live Projector Cast Extension
+# AI Agents Instructions for Glossa.live Projector Cast Extension
 
 ## IDE Rules Sync
 
 This file is kept in sync across all IDE rule files:
 
-| File | IDE |
-|---|---|
-| `CLAUDE.md` | Claude Code |
+| File                              | IDE            |
+| --------------------------------- | -------------- |
+| `CLAUDE.md`                       | Claude Code    |
 | `.github/copilot-instructions.md` | GitHub Copilot |
 
 **When asked to update these rules or instructions, always run the sync script after saving changes:**
@@ -23,9 +23,9 @@ Replace `<path-to-this-file>` with the path of the file you just edited — e.g.
 
 Reusable agent skills are mirrored across tools. Claude Code and GitHub Copilot / VS Code use the **same `SKILL.md` format** ([VS Code agent skills](https://code.visualstudio.com/docs/agent-customization/agent-skills)), so the two files are **byte-identical**:
 
-| File | Tool |
-|---|---|
-| `.claude/skills/<name>/SKILL.md` | Claude Code |
+| File                             | Tool                     |
+| -------------------------------- | ------------------------ |
+| `.claude/skills/<name>/SKILL.md` | Claude Code              |
 | `.github/skills/<name>/SKILL.md` | GitHub Copilot / VS Code |
 
 Frontmatter requires `name` (lowercase-hyphen, must match the parent directory) and `description`. Edit either file, then `bash .claude/sync-skills.sh <path-to-edited-file>` copies it to the mirror (also run automatically by the `PostToolUse` hook). Current skills:

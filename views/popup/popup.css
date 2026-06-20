@@ -77,6 +77,8 @@ body {
 
 .btn-icon svg {
   display: block;
+  width: 20px;
+  height: 20px;
 }
 
 .btn-label {
@@ -200,12 +202,23 @@ body {
   height: 18px;
 }
 
+.settings-summary-label .btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
 .popup-settings summary .chevron {
   flex: none;
   display: flex;
   align-items: center;
   color: #9aa0ad;
   transition: transform 0.15s ease;
+}
+
+.popup-settings summary .chevron svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .popup-settings[open] summary .chevron {
