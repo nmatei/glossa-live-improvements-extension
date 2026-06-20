@@ -30,7 +30,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 10px 6px;
+  padding: 10px 6px 10px 8px;
   border: 1px solid #e1e7eb;
   border-radius: 8px;
   background: #f8fafb;
@@ -53,6 +53,7 @@ body {
   background: #e5f2f2;
   border-color: #2ca9bc;
   border-left-width: 3px;
+  padding-left: 6px;
   color: #1a8a9c;
 }
 
