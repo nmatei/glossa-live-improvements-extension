@@ -66,10 +66,15 @@ setIcon("icon-website", "website");
 setIcon("icon-open-live", "openLive");
 setIcon("icon-settings", "settings");
 setIcon("icon-chevron", "rightArrow");
-setIcon("icon-change-live-url", "openLive");
 
 // ── Constants ────────────────────────────────────────────────────────────
 const MAIN_URL = "https://glossa.live/";
+const DEFAULT_OVERRIDE_BG = "#82663a";
+
+// Accept only "#rrggbb"; fall back to the default so the picker never breaks.
+function normalizeColor(value) {
+  return /^#[0-9a-fA-F]{6}$/.test((value || "").trim()) ? value.trim() : DEFAULT_OVERRIDE_BG;
+}
 
 // ── Storage helpers ────────────────────────────────────────────────────────
 async function getLiveUrl() {
@@ -179,10 +184,12 @@ function setDot(dotElId, open) {
 async function init() {
   const liveUrl = await getLiveUrl();
 
-  // ── Settings: Change Live URL ─────────────────────────────────────────
-  // Available regardless of whether a live tab is open.
+  // ── Settings ──────────────────────────────────────────────────────────
+  // Auto-saved on blur/change; available regardless of whether a live tab is open.
+
+  // Live URL — saved when the field loses focus.
   $("input-live-url").value = liveUrl || "";
-  $("btn-change-live-url").addEventListener("click", async () => {
+  $("input-live-url").addEventListener("change", async () => {
     const url = $("input-live-url").value.trim();
     if (!url) {
       showStatus("Enter a valid Live URL.", "error");
@@ -190,6 +197,28 @@ async function init() {
     }
     await chrome.storage.sync.set({ liveUrl: url });
     showStatus("Live URL saved — reopen the popup to use it.", "info");
+  });
+
+  // Background color — color picker + hex text input stay in sync, both auto-save.
+  // The live page recolors instantly via chrome.storage.onChanged.
+  const { overrideBgColor } = await chrome.storage.sync.get("overrideBgColor");
+  const colorInput = $("input-bg-color");
+  const colorText = $("input-bg-color-text");
+  colorInput.value = normalizeColor(overrideBgColor || DEFAULT_OVERRIDE_BG);
+  colorText.value = overrideBgColor || DEFAULT_OVERRIDE_BG;
+
+  const saveColor = async value => {
+    await chrome.storage.sync.set({ overrideBgColor: value });
+    showStatus("Background color saved.", "info");
+  };
+  colorInput.addEventListener("change", () => {
+    colorText.value = colorInput.value;
+    saveColor(colorInput.value);
+  });
+  colorText.addEventListener("change", () => {
+    const normalized = normalizeColor(colorText.value);
+    colorInput.value = normalized;
+    saveColor(normalized);
   });
 
   // Link dots: green when the corresponding page is already open.

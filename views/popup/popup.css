@@ -261,6 +261,37 @@ body {
   border-color: #2ca9bc;
 }
 
+/* ── Background color field (picker + hex input) ── */
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-field .settings-input {
+  flex: 1;
+}
+
+.color-swatch {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #e1e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.color-swatch::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+
+.color-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
 .settings-save {
   display: flex;
   align-items: center;

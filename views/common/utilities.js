@@ -139,6 +139,90 @@ function unmaskElement(element) {
   element.classList.remove("extension-loading-mask");
 }
 
+// ── Color helpers ────────────────────────────────────────────────────────────
+// Used to derive the projector-cast override palette from a single primary
+// background color picked by the user (see views/glossa/overrides.css defaults).
+
+/**
+ * Convert a "#rrggbb" hex color to [hue (0-360), saturation %, lightness %].
+ * @param {String} hex
+ * @returns {[number, number, number]}
+ */
+function hexToHsl(hex) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  let h = 0;
+  let s = 0;
+  if (d) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    switch (max) {
+      case r:
+        h = ((g - b) / d) % 6;
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      default:
+        h = (r - g) / d + 4;
+    }
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return [h, s * 100, l * 100];
+}
+
+/**
+ * Convert HSL (hue 0-360, saturation %, lightness %) back to "#rrggbb".
+ * @param {Number} h
+ * @param {Number} s
+ * @param {Number} l
+ * @returns {String}
+ */
+function hslToHex(h, s, l) {
+  s /= 100;
+  l /= 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r, g, b;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const toHex = v =>
+    Math.round((v + m) * 255)
+      .toString(16)
+      .padStart(2, "0");
+  return "#" + toHex(r) + toHex(g) + toHex(b);
+}
+
+/**
+ * Derive the full projector-cast override palette from a single primary
+ * background color. The offsets reproduce the original hardcoded palette
+ * (#82663a) within ~2 hex units and keep the same relationships for any hue.
+ * @param {String} hex primary background color, e.g. "#82663a"
+ * @returns {{bg:string, activeBg:string, bgHover:string, buttonBorder:string, text:string, textSecondary:string}}
+ */
+function deriveOverrideColors(hex) {
+  const [h, s, l] = hexToHsl(hex);
+  const clamp = v => Math.max(0, Math.min(100, v));
+  return {
+    bg: hex,
+    activeBg: hslToHex(h, clamp(s + 4), clamp(l - 1)),
+    bgHover: hslToHex(h, clamp(s + 20), clamp(l - 8)),
+    buttonBorder: hslToHex(h, clamp(s + 9), clamp(l - 6)),
+    text: "#ffffff",
+    textSecondary: "rgba(255, 255, 255, 0.68)"
+  };
+}
+
 if (typeof module === "object" && typeof module.exports === "object") {
   module.exports = {};
 }

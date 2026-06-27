@@ -1,6 +1,6 @@
 {
   "name": "glossa-live-projector-cast",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Glossa.live projector cast — Chrome extension for presenting Glossa.live on a projector or TV screen 📽️",
   "main": "index.js",
   "scripts": {
