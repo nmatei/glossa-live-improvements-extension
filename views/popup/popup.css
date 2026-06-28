@@ -24,6 +24,16 @@ body {
   padding: 10px;
 }
 
+/* Non-page actions (Refresh, Fullscreen) on their own row — keeps the 4-column
+   width via two empty placeholders so every button is the same size. */
+.popup-grid-secondary {
+  padding-top: 0;
+}
+
+.popup-placeholder {
+  visibility: hidden;
+}
+
 .popup-btn {
   display: flex;
   flex-direction: column;
@@ -290,6 +300,13 @@ body {
 .color-swatch::-webkit-color-swatch {
   border: none;
   border-radius: 4px;
+}
+
+/* ── Original text size range ── */
+.settings-range {
+  width: 100%;
+  accent-color: #2ca9bc;
+  cursor: pointer;
 }
 
 .settings-save {

@@ -7,6 +7,8 @@
   --glossa-override-text: #ffffff;
   --glossa-override-text-secondary: #ffffffae;
   --glossa-override-button-border: #735729;
+  /* Original (italic) caption line size as a fraction of the translation size. */
+  --glossa-original-text-scale: 0.8;
 }
 
 /* Simple Prompt Overrides */
@@ -55,6 +57,10 @@ body.glossa-live-improvements-extension .text-gray-400 {
 body.glossa-live-improvements-extension .text-gray-500 {
   color: var(--glossa-override-text-secondary);
 }
+/* original (italic) line size — fraction of the translation base (text-2xl = 1.5rem) */
+body.glossa-live-improvements-extension .bg-white p.text-xl {
+  font-size: calc(1.5rem * var(--glossa-original-text-scale)) !important;
+}
 body.glossa-live-improvements-extension .group:hover .group-hover\:text-gray-600 {
   color: var(--glossa-override-text-secondary);
 }
@@ -76,9 +82,10 @@ body.glossa-live-improvements-extension .bg-white:fullscreen p.text-2xl {
   line-height: 4.2rem !important;
 }
 
-body.glossa-live-improvements-extension .bg-white:fullscreen .dark\:text-gray-500:is(.dark *) {
+/* original (italic) line in fullscreen — fraction of the fullscreen translation base (3.5rem), light + dark */
+body.glossa-live-improvements-extension .bg-white:fullscreen p.text-xl {
   color: var(--glossa-override-text-secondary) !important;
-  font-size: 0.8rem !important;
+  font-size: calc(3.5rem * var(--glossa-original-text-scale)) !important;
 }
 
 body.glossa-live-improvements-extension .bg-white:fullscreen .mb-0\.5 {

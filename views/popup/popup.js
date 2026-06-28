@@ -60,6 +60,8 @@ function setButtonsDisabled(disabled) {
 // ── Initial icon render ────────────────────────────────────────────────────
 setIcon("icon-play-pause", "play");
 setIcon("icon-mute", "mute");
+setIcon("icon-timestamps", "clock");
+setIcon("icon-originals", "eye");
 setIcon("icon-refresh", "refresh");
 setIcon("icon-fullscreen", "fullscreen");
 setIcon("icon-website", "website");
@@ -70,10 +72,17 @@ setIcon("icon-chevron", "rightArrow");
 // ── Constants ────────────────────────────────────────────────────────────
 const MAIN_URL = "https://glossa.live/";
 const DEFAULT_OVERRIDE_BG = "#82663a";
+const DEFAULT_ORIGINAL_SCALE = 80;
 
 // Accept only "#rrggbb"; fall back to the default so the picker never breaks.
 function normalizeColor(value) {
   return /^#[0-9a-fA-F]{6}$/.test((value || "").trim()) ? value.trim() : DEFAULT_OVERRIDE_BG;
+}
+
+// Clamp the original-text size to 30–90; fall back to the default if not numeric.
+function clampScale(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(30, Math.min(90, n)) : DEFAULT_ORIGINAL_SCALE;
 }
 
 // ── Storage helpers ────────────────────────────────────────────────────────
@@ -139,7 +148,13 @@ async function getTabState(tabId) {
   return execInTab(tabId, () => {
     return {
       isPlaying: !!document.querySelector('button[title="Pause"]'),
-      isMuted: !!document.querySelector('button[title="Unmute"]')
+      isMuted: !!document.querySelector('button[title="Unmute"]'),
+      // Timestamps visible when glossa shows the "Hide Timestamps" control.
+      showTimestamps: !!document.querySelector('button[title="Hide Timestamps"]'),
+      // Originals visible when glossa shows the "Hide Originals" text button.
+      showOriginals: [...document.querySelectorAll("button")].some(
+        b => b.textContent.trim() === "Hide Originals"
+      )
     };
   });
 }
@@ -170,6 +185,26 @@ function applyState(state) {
     setIcon("icon-mute", "mute");
     $("label-mute").textContent = "Mute";
     muteBtn.classList.remove("active");
+  }
+
+  // Timestamps — active when currently shown; label is the action a click performs
+  const tsBtn = $("btn-timestamps");
+  if (state.showTimestamps) {
+    $("label-timestamps").textContent = "Hide Time";
+    tsBtn.classList.add("active");
+  } else {
+    $("label-timestamps").textContent = "Show Time";
+    tsBtn.classList.remove("active");
+  }
+
+  // Originals — active when currently shown; label is the action a click performs
+  const origBtn = $("btn-originals");
+  if (state.showOriginals) {
+    $("label-originals").textContent = "Hide Orig.";
+    origBtn.classList.add("active");
+  } else {
+    $("label-originals").textContent = "Show Orig.";
+    origBtn.classList.remove("active");
   }
 
   // Keep the footer in sync with play/mute state
@@ -219,6 +254,24 @@ async function init() {
     const normalized = normalizeColor(colorText.value);
     colorInput.value = normalized;
     saveColor(normalized);
+  });
+
+  // Original text size — range slider, % of translation. The live page resizes
+  // instantly via chrome.storage.onChanged.
+  const { originalTextScale } = await chrome.storage.sync.get("originalTextScale");
+  const scaleInput = $("input-original-scale");
+  const scaleValue = $("original-scale-value");
+  const initialScale = clampScale(originalTextScale ?? DEFAULT_ORIGINAL_SCALE);
+  scaleInput.value = initialScale;
+  scaleValue.textContent = initialScale;
+
+  scaleInput.addEventListener("input", () => {
+    scaleValue.textContent = scaleInput.value;
+  });
+  scaleInput.addEventListener("change", async () => {
+    const scale = clampScale(scaleInput.value);
+    await chrome.storage.sync.set({ originalTextScale: scale });
+    showStatus("Original text size saved.", "info");
   });
 
   // Link dots: green when the corresponding page is already open.
@@ -287,6 +340,34 @@ async function init() {
         const sel = isMuted ? 'button[title="Unmute"]' : 'button[title="Mute"]';
         document.querySelector(sel)?.click();
       }, [st.isMuted]);
+    }
+
+    setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);
+  });
+
+  // ── Timestamps (show / hide) ──────────────────────────────────────────
+  $("btn-timestamps").addEventListener("click", async () => {
+    for (const tab of tabs) {
+      await execInTab(tab.id, () => {
+        document
+          .querySelector('button[title="Show Timestamps"], button[title="Hide Timestamps"]')
+          ?.click();
+      });
+    }
+
+    setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);
+  });
+
+  // ── Originals (show / hide) ───────────────────────────────────────────
+  $("btn-originals").addEventListener("click", async () => {
+    for (const tab of tabs) {
+      await execInTab(tab.id, () => {
+        const btn = [...document.querySelectorAll("button")].find(b => {
+          const t = b.textContent.trim();
+          return t === "Show Originals" || t === "Hide Originals";
+        });
+        btn?.click();
+      });
     }
 
     setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);

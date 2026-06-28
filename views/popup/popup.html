@@ -34,6 +34,18 @@
           <span class="btn-label" id="label-mute">Mute</span>
         </button>
 
+        <button id="btn-originals" class="popup-btn" title="Show / Hide originals">
+          <span class="btn-icon" id="icon-originals"></span>
+          <span class="btn-label" id="label-originals">Orig.</span>
+        </button>
+
+        <button id="btn-timestamps" class="popup-btn" title="Show / Hide timestamps">
+          <span class="btn-icon" id="icon-timestamps"></span>
+          <span class="btn-label" id="label-timestamps">Time</span>
+        </button>
+      </div>
+
+      <div class="popup-grid popup-grid-secondary">
         <button id="btn-refresh" class="popup-btn" title="Refresh page (restores play state)">
           <span class="btn-icon" id="icon-refresh"></span>
           <span class="btn-label">Refresh</span>
@@ -43,6 +55,10 @@
           <span class="btn-icon" id="icon-fullscreen"></span>
           <span class="btn-label" id="label-fullscreen">Fullscreen</span>
         </button>
+
+        <!-- Empty placeholders so Refresh/Fullscreen match the page-action button width -->
+        <span class="popup-placeholder" aria-hidden="true"></span>
+        <span class="popup-placeholder" aria-hidden="true"></span>
       </div>
 
       <details id="section-settings" class="popup-settings">
@@ -73,6 +89,18 @@
               placeholder="#82663a"
             />
           </div>
+
+          <label for="input-original-scale" class="settings-label"
+            >Original text size (<span id="original-scale-value">80</span>% of translation)</label
+          >
+          <input
+            id="input-original-scale"
+            type="range"
+            min="30"
+            max="90"
+            step="5"
+            class="settings-range"
+          />
         </div>
       </details>
 

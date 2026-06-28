@@ -47,6 +47,9 @@ async function initEvents() {
     // Apply the user-configured override palette (live-updates via storage)
     await applyOverrideColors();
 
+    // Apply the user-configured original-text size (live-updates via storage)
+    await applyOriginalTextScale();
+
     // Restore the page state after a popup-triggered refresh
     await restoreStateAfterRefresh();
 
@@ -70,6 +73,9 @@ async function initEvents() {
 // Default primary background — mirrors the :root fallback in overrides.css.
 const DEFAULT_OVERRIDE_BG = "#82663a";
 
+// Default original-text size (percent of translation) — mirrors the popup default.
+const DEFAULT_ORIGINAL_SCALE = 80;
+
 // Read the stored primary color, derive the full palette, and write the CSS
 // custom properties on :root. Inline styles override the stylesheet defaults,
 // so this recolors the page without touching overrides.css.
@@ -85,10 +91,22 @@ async function applyOverrideColors() {
   root.setProperty("--glossa-override-button-border", palette.buttonBorder);
 }
 
-// Live-update the palette while the popup is open (color picked in settings).
+// Read the stored original-text size (percent), clamp it, and write it as a
+// fraction to the CSS variable used by overrides.css.
+async function applyOriginalTextScale() {
+  const { originalTextScale } = await chrome.storage.sync.get("originalTextScale");
+  const percent = Math.max(30, Math.min(90, Number(originalTextScale) || DEFAULT_ORIGINAL_SCALE));
+  document.documentElement.style.setProperty("--glossa-original-text-scale", percent / 100);
+}
+
+// Live-update styling while the popup is open (color / original size in settings).
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "sync" && changes.overrideBgColor) {
+  if (area !== "sync") return;
+  if (changes.overrideBgColor) {
     applyOverrideColors();
+  }
+  if (changes.originalTextScale) {
+    applyOriginalTextScale();
   }
 });
 
