@@ -42,6 +42,12 @@ body.glossa-live-improvements-extension .glx {
   /* --accent left as the site default (orange) */
 }
 
+/* Let the transcript use the full page width (the site caps it at 720px and
+   centers it) — better use of a projector/TV screen. */
+body.glossa-live-improvements-extension .lsn .transcript {
+  max-width: none !important;
+}
+
 /* Meta line size (original text + timestamp share one `.seg-meta` line) — a
    fraction of the translation base (1.55rem * --font-scale), controlled by the
    popup's "Original text size". Sized on the `.seg-meta` container so both the
