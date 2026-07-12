@@ -13,3 +13,6 @@ yarn-error.log
 .buildpath
 .project
 .settings
+
+views/glossa/glossa.live-content
+

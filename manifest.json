@@ -1,6 +1,6 @@
 {
   "name": "Glossa.live projector cast",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Present Glossa.live on a projector or TV screen — cast-optimised UI improvements for presenters 📽️",
   "manifest_version": 3,
   "author": "Matei Nicolae",
@@ -28,7 +28,7 @@
     },
     {
       "matches": ["https://glossa.live/*"],
-      "js": ["views/glossa/index.js"],
+      "js": ["views/glossa/selectors.js", "views/glossa/index.js"],
       "css": ["views/glossa/overrides.css"]
     }
   ],

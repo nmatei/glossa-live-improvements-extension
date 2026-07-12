@@ -17,28 +17,6 @@ async function getLiveUrl(reset = false) {
   return url;
 }
 
-function showContextMenu(content, e) {
-  const menu = getContextMenu([
-    {
-      text: "Fullscreen",
-      icon: "🔲",
-      itemId: "fullscreen",
-      handler: target => {
-        content.requestFullscreen();
-      }
-    },
-    {
-      text: "Change Live URL",
-      icon: "🔗",
-      itemId: "change-live-url",
-      handler: async () => {
-        await getLiveUrl(true);
-      }
-    }
-  ]);
-  showByCursor(menu, e);
-}
-
 async function initEvents() {
   const liveUrl = await getLiveUrl();
   if (window.location.href.startsWith(liveUrl)) {
@@ -54,20 +32,7 @@ async function initEvents() {
     await restoreStateAfterRefresh();
 
     initAutoScroll();
-    initAudioState();
   }
-
-  document.body.addEventListener("contextmenu", e => {
-    const content = [...document.querySelectorAll("div.bg-white")].find(
-      div => div.firstElementChild?.matches("div.overflow-y-auto")
-    );
-    if (content && content.contains(e.target)) {
-      e.stopPropagation();
-      e.preventDefault();
-
-      showContextMenu(content, e);
-    }
-  });
 }
 
 // Default primary background — mirrors the :root fallback in overrides.css.
@@ -76,19 +41,22 @@ const DEFAULT_OVERRIDE_BG = "#82663a";
 // Default original-text size (percent of translation) — mirrors the popup default.
 const DEFAULT_ORIGINAL_SCALE = 80;
 
-// Read the stored primary color, derive the full palette, and write the CSS
-// custom properties on :root. Inline styles override the stylesheet defaults,
-// so this recolors the page without touching overrides.css.
+// Read the stored primary color, derive the palette, and write the namespaced
+// CSS custom properties on :root (documentElement). glossa.live never redefines
+// these `--glossa-override-*` vars, so they cascade cleanly; overrides.css reads
+// them inside a `.glx` rule to remap the site's own theme variables (--bg,
+// --bg-elev, …) without fighting React's inline styles on the widget root.
 async function applyOverrideColors() {
   const { overrideBgColor } = await chrome.storage.sync.get("overrideBgColor");
   const palette = deriveOverrideColors(overrideBgColor || DEFAULT_OVERRIDE_BG);
   const root = document.documentElement.style;
   root.setProperty("--glossa-override-bg", palette.bg);
-  root.setProperty("--glossa-override-active-bg", palette.activeBg);
-  root.setProperty("--glossa-override-bg-hover", palette.bgHover);
+  root.setProperty("--glossa-override-bg-elev", palette.bgElev);
+  root.setProperty("--glossa-override-bg-sheet", palette.bgSheet);
+  root.setProperty("--glossa-override-seg-track", palette.segTrack);
+  root.setProperty("--glossa-override-border", palette.border);
   root.setProperty("--glossa-override-text", palette.text);
   root.setProperty("--glossa-override-text-secondary", palette.textSecondary);
-  root.setProperty("--glossa-override-button-border", palette.buttonBorder);
 }
 
 // Read the stored original-text size (percent), clamp it, and write it as a
@@ -120,57 +88,33 @@ async function restoreStateAfterRefresh() {
   // Consume the flags so a manual reload doesn't replay them
   await chrome.storage.sync.set({ shouldAutoPlay: false, shouldMute: false });
 
-  // Play — click Play once it renders
+  // Play — the play/pause control is a single toggle: aria-label="Play" while
+  // paused, "Pause" while playing. Click only if it renders in the paused state.
   if (shouldAutoPlay) {
-    const playBtn = await waitElement('button[title="Play"]', 10000, 250);
-    playBtn?.click();
+    const playBtn = await waitElement(GLOSSA_SELECTORS.playPause, 10000, 250);
+    if (playBtn && playBtn.getAttribute("aria-label") === "Play") {
+      playBtn.click();
+    }
   }
 
-  // Mute — the Mute/Unmute control only appears once audio has started.
-  // title="Mute" → currently unmuted; title="Unmute" → currently muted.
+  // Mute — the sound toggle carries the active class when sound is enabled. Click
+  // it to mute only when it's currently on.
   if (shouldMute) {
-    const audioBtn = await waitElement('button[title="Mute"], button[title="Unmute"]', 10000, 250);
-    if (audioBtn && audioBtn.title === "Mute") {
-      audioBtn.click();
+    const soundBtn = await waitElement(GLOSSA_SELECTORS.sound, 10000, 250);
+    if (soundBtn && soundBtn.classList.contains(GLOSSA_SELECTORS.activeClass)) {
+      soundBtn.click();
     }
   }
-}
-
-function initAudioState() {
-  function updateAudioClass() {
-    const muteBtn = document.querySelector('button[title="Mute"]');
-    const unmuteBtn = document.querySelector('button[title="Unmute"]');
-    // Only update if the mute/unmute button is actually present
-    if (muteBtn || unmuteBtn) {
-      document.body.classList.toggle("audio-not-started", !muteBtn);
-    }
-  }
-
-  // Apply after load settles, in case the button renders late
-  setTimeout(updateAudioClass, 2000);
-
-  // Toggle immediately on click of Mute/Unmute button
-  document.body.addEventListener("click", e => {
-    const btn = e.target.closest('button[title="Mute"], button[title="Unmute"]');
-    if (btn) {
-      // Title reflects state before click, so invert
-      const willBeAudioOn = btn.title === "Unmute";
-      document.body.classList.toggle("audio-not-started", !willBeAudioOn);
-    }
-  });
-
-  const observer = new MutationObserver(updateAudioClass);
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["title"] });
 }
 
 function initAutoScroll() {
   let scrollTimer = null;
 
   const observer = new MutationObserver(() => {
-    const btn = document.querySelector('button[aria-label="Scroll to latest"]');
+    const btn = document.querySelector(GLOSSA_SELECTORS.scrollToLatest);
     if (btn && !scrollTimer) {
       scrollTimer = setTimeout(() => {
-        const current = document.querySelector('button[aria-label="Scroll to latest"]');
+        const current = document.querySelector(GLOSSA_SELECTORS.scrollToLatest);
         if (current) {
           current.click();
         }

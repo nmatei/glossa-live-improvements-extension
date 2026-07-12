@@ -204,25 +204,32 @@ function hslToHex(h, s, l) {
 }
 
 /**
- * Derive the full projector-cast override palette from a single primary
- * background color. The offsets reproduce the original hardcoded palette
- * (#82663a) within ~2 hex units and keep the same relationships for any hue.
+ * Derive the projector-cast override palette from a single primary background
+ * color. These keys map onto glossa.live's own theme CSS variables (see
+ * views/glossa/overrides.css): `bg` → --bg, `bgElev` → --bg-elev (control
+ * buttons), `bgSheet` → --bg-sheet (settings sheet), etc. The elevated surfaces
+ * are lightened slightly from the base so buttons and the sheet lift off the
+ * background; the overlay tints (track/border) are translucent whites that read
+ * consistently over any hue.
  * @param {String} hex primary background color, e.g. "#82663a"
- * @returns {{bg:string, activeBg:string, bgHover:string, buttonBorder:string, text:string, textSecondary:string}}
+ * @returns {{bg:string, bgElev:string, bgSheet:string, segTrack:string, border:string, text:string, textSecondary:string}}
  */
 function deriveOverrideColors(hex) {
   const [h, s, l] = hexToHsl(hex);
   const clamp = v => Math.max(0, Math.min(100, v));
   return {
     bg: hex,
-    activeBg: hslToHex(h, clamp(s + 4), clamp(l - 1)),
-    bgHover: hslToHex(h, clamp(s + 20), clamp(l - 8)),
-    buttonBorder: hslToHex(h, clamp(s + 9), clamp(l - 6)),
+    bgElev: hslToHex(h, clamp(s + 2), clamp(l + 7)),
+    bgSheet: hslToHex(h, clamp(s + 2), clamp(l + 9)),
+    segTrack: "rgba(255, 255, 255, 0.09)",
+    border: "rgba(255, 255, 255, 0.12)",
     text: "#ffffff",
     textSecondary: "rgba(255, 255, 255, 0.68)"
   };
 }
 
+// Export pure helpers for unit tests (Node/Jest). The browser never defines
+// `module`, so this block is a no-op there.
 if (typeof module === "object" && typeof module.exports === "object") {
-  module.exports = {};
+  module.exports = { hexToHsl, hslToHex, deriveOverrideColors, debounce, asyncForEach, sleep };
 }

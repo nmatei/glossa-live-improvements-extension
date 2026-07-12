@@ -145,18 +145,20 @@ async function execInTab(tabId, func, args = []) {
 
 // ── Page state detection ───────────────────────────────────────────────────
 async function getTabState(tabId) {
-  return execInTab(tabId, () => {
+  // GLOSSA_SELECTORS is passed as an arg because the injected function runs in
+  // the page's main world and can't close over the popup's copy.
+  return execInTab(tabId, S => {
+    // Play/pause is a single toggle button; the "playing" class marks the
+    // running state. The sound/timestamps/originals toggles live in the (always
+    // mounted) settings sheet and carry the active class when on.
+    const soundBtn = document.querySelector(S.sound);
     return {
-      isPlaying: !!document.querySelector('button[title="Pause"]'),
-      isMuted: !!document.querySelector('button[title="Unmute"]'),
-      // Timestamps visible when glossa shows the "Hide Timestamps" control.
-      showTimestamps: !!document.querySelector('button[title="Hide Timestamps"]'),
-      // Originals visible when glossa shows the "Hide Originals" text button.
-      showOriginals: [...document.querySelectorAll("button")].some(
-        b => b.textContent.trim() === "Hide Originals"
-      )
+      isPlaying: !!document.querySelector(S.playPausePlaying),
+      isMuted: !!soundBtn && !soundBtn.classList.contains(S.activeClass),
+      showTimestamps: !!document.querySelector(S.timestamps + "." + S.activeClass),
+      showOriginals: !!document.querySelector(S.originals + "." + S.activeClass)
     };
-  });
+  }, [GLOSSA_SELECTORS]);
 }
 
 // ── UI update ──────────────────────────────────────────────────────────────
@@ -312,66 +314,35 @@ async function init() {
     setBaseStatus("Connecting to your live page…", "info", "idle");
   }
 
+  // Click glossa.live's own control (a single toggle button) across every live
+  // tab, then re-read state. The settings-sheet toggles fire even while the
+  // sheet is closed, so no need to open it first.
+  async function clickControl(selector) {
+    for (const tab of tabs) {
+      await execInTab(tab.id, sel => {
+        document.querySelector(sel)?.click();
+      }, [selector]);
+    }
+    setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);
+  }
+
   // ── Play / Pause ──────────────────────────────────────────────────────
   $("btn-play-pause").addEventListener("click", async () => {
     const st = await getTabState(tabs[0].id);
     if (!st) return;
-
-    for (const tab of tabs) {
-      await execInTab(tab.id, isPlaying => {
-        const sel = isPlaying ? 'button[title="Pause"]' : 'button[title="Play"]';
-        document.querySelector(sel)?.click();
-      }, [st.isPlaying]);
-    }
-
     // Persist play intent so a subsequent Refresh can restore it
     await chrome.storage.sync.set({ shouldAutoPlay: !st.isPlaying });
-
-    setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);
+    await clickControl(GLOSSA_SELECTORS.playPause);
   });
 
   // ── Mute / Unmute ─────────────────────────────────────────────────────
-  $("btn-mute").addEventListener("click", async () => {
-    const st = await getTabState(tabs[0].id);
-    if (!st) return;
-
-    for (const tab of tabs) {
-      await execInTab(tab.id, isMuted => {
-        const sel = isMuted ? 'button[title="Unmute"]' : 'button[title="Mute"]';
-        document.querySelector(sel)?.click();
-      }, [st.isMuted]);
-    }
-
-    setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);
-  });
+  $("btn-mute").addEventListener("click", () => clickControl(GLOSSA_SELECTORS.sound));
 
   // ── Timestamps (show / hide) ──────────────────────────────────────────
-  $("btn-timestamps").addEventListener("click", async () => {
-    for (const tab of tabs) {
-      await execInTab(tab.id, () => {
-        document
-          .querySelector('button[title="Show Timestamps"], button[title="Hide Timestamps"]')
-          ?.click();
-      });
-    }
-
-    setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);
-  });
+  $("btn-timestamps").addEventListener("click", () => clickControl(GLOSSA_SELECTORS.timestamps));
 
   // ── Originals (show / hide) ───────────────────────────────────────────
-  $("btn-originals").addEventListener("click", async () => {
-    for (const tab of tabs) {
-      await execInTab(tab.id, () => {
-        const btn = [...document.querySelectorAll("button")].find(b => {
-          const t = b.textContent.trim();
-          return t === "Show Originals" || t === "Hide Originals";
-        });
-        btn?.click();
-      });
-    }
-
-    setTimeout(async () => applyState(await getTabState(tabs[0].id)), 300);
-  });
+  $("btn-originals").addEventListener("click", () => clickControl(GLOSSA_SELECTORS.originals));
 
   // ── Fullscreen / Restore ──────────────────────────────────────────────
   async function syncFullscreenBtn() {
@@ -389,11 +360,9 @@ async function init() {
   // runs with the popup's user activation (a declarative content script can't).
   // Waits briefly for the container in case the page is still settling.
   async function enterFullscreen(tabId) {
-    await execInTab(tabId, async () => {
-      const findContent = () =>
-        [...document.querySelectorAll("div.bg-white")].find(
-          div => div.firstElementChild?.matches("div.overflow-y-auto")
-        );
+    await execInTab(tabId, async sel => {
+      // The captions-only region — excludes the on-page control bar.
+      const findContent = () => document.querySelector(sel);
       let el = findContent();
       const end = Date.now() + 8000;
       while (!el && Date.now() < end) {
@@ -401,7 +370,7 @@ async function init() {
         el = findContent();
       }
       el?.requestFullscreen?.();
-    });
+    }, [GLOSSA_SELECTORS.captions]);
   }
 
   // Resolve once the tab reports "complete" (or after a short timeout).
