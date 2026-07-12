@@ -72,11 +72,12 @@ setIcon("icon-chevron", "rightArrow");
 // ── Constants ────────────────────────────────────────────────────────────
 const MAIN_URL = "https://glossa.live/";
 const DEFAULT_OVERRIDE_BG = "#82663a";
+const DEFAULT_OVERRIDE_TEXT = "#ffffff";
 const DEFAULT_ORIGINAL_SCALE = 80;
 
-// Accept only "#rrggbb"; fall back to the default so the picker never breaks.
-function normalizeColor(value) {
-  return /^#[0-9a-fA-F]{6}$/.test((value || "").trim()) ? value.trim() : DEFAULT_OVERRIDE_BG;
+// Accept only "#rrggbb"; fall back to the given default so the picker never breaks.
+function normalizeColor(value, fallback = DEFAULT_OVERRIDE_BG) {
+  return /^#[0-9a-fA-F]{6}$/.test((value || "").trim()) ? value.trim() : fallback;
 }
 
 // Clamp the original-text size to 30–90; fall back to the default if not numeric.
@@ -236,27 +237,44 @@ async function init() {
     showStatus("Live URL saved — reopen the popup to use it.", "info");
   });
 
-  // Background color — color picker + hex text input stay in sync, both auto-save.
-  // The live page recolors instantly via chrome.storage.onChanged.
-  const { overrideBgColor } = await chrome.storage.sync.get("overrideBgColor");
-  const colorInput = $("input-bg-color");
-  const colorText = $("input-bg-color-text");
-  colorInput.value = normalizeColor(overrideBgColor || DEFAULT_OVERRIDE_BG);
-  colorText.value = overrideBgColor || DEFAULT_OVERRIDE_BG;
+  // Color fields — a swatch (type=color) + hex text input that stay in sync and
+  // auto-save. The live page recolors instantly via chrome.storage.onChanged.
+  async function wireColorField(pickerId, textId, storageKey, fallback, savedLabel) {
+    const stored = (await chrome.storage.sync.get(storageKey))[storageKey] || fallback;
+    const picker = $(pickerId);
+    const text = $(textId);
+    picker.value = normalizeColor(stored, fallback);
+    text.value = stored;
 
-  const saveColor = async value => {
-    await chrome.storage.sync.set({ overrideBgColor: value });
-    showStatus("Background color saved.", "info");
-  };
-  colorInput.addEventListener("change", () => {
-    colorText.value = colorInput.value;
-    saveColor(colorInput.value);
-  });
-  colorText.addEventListener("change", () => {
-    const normalized = normalizeColor(colorText.value);
-    colorInput.value = normalized;
-    saveColor(normalized);
-  });
+    const save = async value => {
+      await chrome.storage.sync.set({ [storageKey]: value });
+      showStatus(savedLabel, "info");
+    };
+    picker.addEventListener("change", () => {
+      text.value = picker.value;
+      save(picker.value);
+    });
+    text.addEventListener("change", () => {
+      const normalized = normalizeColor(text.value, fallback);
+      picker.value = normalized;
+      save(normalized);
+    });
+  }
+
+  await wireColorField(
+    "input-bg-color",
+    "input-bg-color-text",
+    "overrideBgColor",
+    DEFAULT_OVERRIDE_BG,
+    "Background color saved."
+  );
+  await wireColorField(
+    "input-text-color",
+    "input-text-color-text",
+    "overrideTextColor",
+    DEFAULT_OVERRIDE_TEXT,
+    "Text color saved."
+  );
 
   // Original text size — range slider, % of translation. The live page resizes
   // instantly via chrome.storage.onChanged.

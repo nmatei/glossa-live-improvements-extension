@@ -204,17 +204,91 @@ function hslToHex(h, s, l) {
 }
 
 /**
- * Derive the projector-cast override palette from a single primary background
- * color. These keys map onto glossa.live's own theme CSS variables (see
- * views/glossa/overrides.css): `bg` → --bg, `bgElev` → --bg-elev (control
- * buttons), `bgSheet` → --bg-sheet (settings sheet), etc. The elevated surfaces
- * are lightened slightly from the base so buttons and the sheet lift off the
- * background; the overlay tints (track/border) are translucent whites that read
- * consistently over any hue.
- * @param {String} hex primary background color, e.g. "#82663a"
- * @returns {{bg:string, bgElev:string, bgSheet:string, segTrack:string, border:string, text:string, textSecondary:string}}
+ * WCAG relative luminance of a "#rrggbb" color (0 = black … 1 = white).
+ * @param {String} hex
+ * @returns {Number}
  */
-function deriveOverrideColors(hex) {
+function relativeLuminance(hex) {
+  const lin = c => {
+    c /= 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  const r = lin(parseInt(hex.slice(1, 3), 16));
+  const g = lin(parseInt(hex.slice(3, 5), 16));
+  const b = lin(parseInt(hex.slice(5, 7), 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * WCAG contrast ratio between two "#rrggbb" colors (1 = identical … 21 = black
+ * vs white).
+ * @param {String} hexA
+ * @param {String} hexB
+ * @returns {Number}
+ */
+function contrastRatio(hexA, hexB) {
+  const a = relativeLuminance(hexA);
+  const b = relativeLuminance(hexB);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+/**
+ * Pick the "live" status color for the given page background. Keeps the semantic
+ * green hue at a vivid saturation and chooses the *most vivid* lightness (nearest
+ * 50) that still clears a contrast target — only drifting to a paler green (dark
+ * bg) or a deeper green (light bg) when the background forces it. This replaces
+ * the site's fixed #16a34a, whose mid lightness collides with a mid-lightness
+ * background like #82663a (barely 1.6:1).
+ * @param {String} bgHex page background color, e.g. "#82663a"
+ * @param {Number} [minContrast=3.5] WCAG contrast target to clear if possible
+ * @returns {String} "#rrggbb"
+ */
+function deriveLiveColor(bgHex, minContrast = 3.5) {
+  const HUE = 142; // green — the "live" indicator stays green by convention
+  const SAT = 90;
+  const candidates = [];
+  for (let l = 30; l <= 80; l += 5) {
+    const hex = hslToHex(HUE, SAT, l);
+    candidates.push({ hex, l, ratio: contrastRatio(hex, bgHex) });
+  }
+  const passing = candidates.filter(c => c.ratio >= minContrast);
+  if (passing.length) {
+    // Most vivid = lightness closest to a pure, saturated 50.
+    passing.sort((a, b) => Math.abs(a.l - 50) - Math.abs(b.l - 50));
+    return passing[0].hex;
+  }
+  // Background is hostile to green — fall back to the highest contrast we can get.
+  candidates.sort((a, b) => b.ratio - a.ratio);
+  return candidates[0].hex;
+}
+
+/**
+ * Convert "#rrggbb" to an "rgba(r, g, b, a)" string.
+ * @param {String} hex
+ * @param {Number} alpha 0–1
+ * @returns {String}
+ */
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Derive the projector-cast override palette from the user's primary background
+ * color and text color. These keys map onto glossa.live's own theme CSS
+ * variables (see views/glossa/overrides.css): `bg` → --bg, `bgElev` → --bg-elev
+ * (control buttons), `bgSheet` → --bg-sheet (settings sheet), etc. The elevated
+ * surfaces are lightened slightly from the base so buttons and the sheet lift
+ * off the background; the overlay tints (track/border) are translucent whites
+ * that read consistently over any hue. `textSecondary` is the chosen text color
+ * at reduced opacity (dimmed captions, meta line, timestamps).
+ * @param {String} hex primary background color, e.g. "#82663a"
+ * @param {String} [textHex="#ffffff"] primary text color
+ * @returns {{bg:string, bgElev:string, bgSheet:string, segTrack:string, border:string, text:string, textSecondary:string, live:string}}
+ */
+function deriveOverrideColors(hex, textHex = "#ffffff") {
   const [h, s, l] = hexToHsl(hex);
   const clamp = v => Math.max(0, Math.min(100, v));
   return {
@@ -223,13 +297,26 @@ function deriveOverrideColors(hex) {
     bgSheet: hslToHex(h, clamp(s + 2), clamp(l + 9)),
     segTrack: "rgba(255, 255, 255, 0.09)",
     border: "rgba(255, 255, 255, 0.12)",
-    text: "#ffffff",
-    textSecondary: "rgba(255, 255, 255, 0.68)"
+    text: textHex,
+    textSecondary: hexToRgba(textHex, 0.68),
+    // "Live" status pill — best-contrast green for this background.
+    live: deriveLiveColor(hex)
   };
 }
 
 // Export pure helpers for unit tests (Node/Jest). The browser never defines
 // `module`, so this block is a no-op there.
 if (typeof module === "object" && typeof module.exports === "object") {
-  module.exports = { hexToHsl, hslToHex, deriveOverrideColors, debounce, asyncForEach, sleep };
+  module.exports = {
+    hexToHsl,
+    hslToHex,
+    hexToRgba,
+    relativeLuminance,
+    contrastRatio,
+    deriveLiveColor,
+    deriveOverrideColors,
+    debounce,
+    asyncForEach,
+    sleep
+  };
 }

@@ -17,6 +17,7 @@
   --glossa-override-border: rgba(255, 255, 255, 0.12);
   --glossa-override-text: #ffffff;
   --glossa-override-text-secondary: #ffffffae;
+  --glossa-override-live: #08f961;
   /* Original (italic) caption line size as a fraction of the translation size. */
   --glossa-original-text-scale: 0.8;
 }
@@ -39,6 +40,8 @@ body.glossa-live-improvements-extension .glx {
   --text: var(--glossa-override-text);
   --text-mid: var(--glossa-override-text-secondary);
   --text-dim: var(--glossa-override-text-secondary);
+  /* "Live" status pill — contrast-adjusted green for this background. */
+  --live: var(--glossa-override-live);
   /* --accent left as the site default (orange) */
 }
 
@@ -46,6 +49,18 @@ body.glossa-live-improvements-extension .glx {
    centers it) — better use of a projector/TV screen. */
 body.glossa-live-improvements-extension .lsn .transcript {
   max-width: none !important;
+}
+
+/* Shrink the control buttons (language, play/pause, settings) — on a TV/projector
+   the captions matter, not oversized touch targets. The `.ctl-play` rule comes
+   after `.ctl` so it wins (same specificity) and stays the larger primary. */
+body.glossa-live-improvements-extension .lsn .ctl {
+  width: 40px !important;
+  height: 40px !important;
+}
+body.glossa-live-improvements-extension .lsn .ctl-play {
+  width: 50px !important;
+  height: 50px !important;
 }
 
 /* Meta line size (original text + timestamp share one `.seg-meta` line) — a

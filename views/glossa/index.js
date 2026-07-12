@@ -35,20 +35,28 @@ async function initEvents() {
   }
 }
 
-// Default primary background — mirrors the :root fallback in overrides.css.
+// Default primary background / text — mirror the :root fallbacks in overrides.css.
 const DEFAULT_OVERRIDE_BG = "#82663a";
+const DEFAULT_OVERRIDE_TEXT = "#ffffff";
 
 // Default original-text size (percent of translation) — mirrors the popup default.
 const DEFAULT_ORIGINAL_SCALE = 80;
 
-// Read the stored primary color, derive the palette, and write the namespaced
-// CSS custom properties on :root (documentElement). glossa.live never redefines
-// these `--glossa-override-*` vars, so they cascade cleanly; overrides.css reads
-// them inside a `.glx` rule to remap the site's own theme variables (--bg,
-// --bg-elev, …) without fighting React's inline styles on the widget root.
+// Read the stored background + text colors, derive the palette, and write the
+// namespaced CSS custom properties on :root (documentElement). glossa.live never
+// redefines these `--glossa-override-*` vars, so they cascade cleanly;
+// overrides.css reads them inside a `.glx` rule to remap the site's own theme
+// variables (--bg, --bg-elev, …) without fighting React's inline styles on the
+// widget root.
 async function applyOverrideColors() {
-  const { overrideBgColor } = await chrome.storage.sync.get("overrideBgColor");
-  const palette = deriveOverrideColors(overrideBgColor || DEFAULT_OVERRIDE_BG);
+  const { overrideBgColor, overrideTextColor } = await chrome.storage.sync.get([
+    "overrideBgColor",
+    "overrideTextColor"
+  ]);
+  const palette = deriveOverrideColors(
+    overrideBgColor || DEFAULT_OVERRIDE_BG,
+    overrideTextColor || DEFAULT_OVERRIDE_TEXT
+  );
   const root = document.documentElement.style;
   root.setProperty("--glossa-override-bg", palette.bg);
   root.setProperty("--glossa-override-bg-elev", palette.bgElev);
@@ -57,6 +65,7 @@ async function applyOverrideColors() {
   root.setProperty("--glossa-override-border", palette.border);
   root.setProperty("--glossa-override-text", palette.text);
   root.setProperty("--glossa-override-text-secondary", palette.textSecondary);
+  root.setProperty("--glossa-override-live", palette.live);
 }
 
 // Read the stored original-text size (percent), clamp it, and write it as a
@@ -70,7 +79,7 @@ async function applyOriginalTextScale() {
 // Live-update styling while the popup is open (color / original size in settings).
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "sync") return;
-  if (changes.overrideBgColor) {
+  if (changes.overrideBgColor || changes.overrideTextColor) {
     applyOverrideColors();
   }
   if (changes.originalTextScale) {
