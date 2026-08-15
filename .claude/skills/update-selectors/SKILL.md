@@ -17,17 +17,18 @@ Open the configured live page in Chrome, then **Save Page As → "Webpage,
 Complete"** into:
 
 ```
-views/glossa/glossa.live-content/
+test/integration/glossa.live-content/
 ```
 
 That folder is git-ignored (see `.gitignore`) — it holds the reference HTML plus
-the `_files/` bundle (JS + CSS). Delete any previous capture first so you're
-reading the latest markup.
+the `_files/` bundle (JS + CSS). It lives under `test/`, outside the extension
+code, so it is never part of a production build. Delete any previous capture
+first so you're reading the latest markup.
 
 ## Step 2 — Inventory the controls
 
 The saved HTML is usually minified into one line, so use `grep`/Python rather
-than reading it top to bottom. From `views/glossa/glossa.live-content/`:
+than reading it top to bottom. From `test/integration/glossa.live-content/`:
 
 ```bash
 f="$(ls *.html | head -1)"

@@ -124,7 +124,8 @@ const { liveUrl } = await chrome.storage.sync.get("liveUrl");
 
 - **Jest + ts-jest** are configured (`npm test` / `npm run watch-test`).
 - `views/common/utilities.js` is loaded as a Jest `setupFiles` entry.
-- No test suite exists yet — add tests under a `test/` directory and mock Chrome APIs as needed.
+- Unit tests live in `test/unit/`; mock Chrome APIs as needed.
+- `test/integration/glossa.live-content/` holds a saved copy of the live page (git-ignored) used to re-derive selectors — see the `update-selectors` skill. It lives outside `views/` on purpose, so it is never part of the extension build.
 
 ## Build & Deployment
 

@@ -8,7 +8,8 @@
 // is a one-file update.
 //
 // HOW TO UPDATE when the site changes: save the latest live page into
-// `views/glossa/glossa.live-content/` (that folder is git-ignored) and follow
+// `test/integration/glossa.live-content/` (git-ignored, kept out of the
+// extension code so it never ships in a build) and follow
 // the `update-glossa-selectors` skill. The skill walks you through re-deriving
 // each selector below from the captured HTML/CSS/JS bundle.
 //
