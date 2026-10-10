@@ -24,8 +24,8 @@ body {
   padding: 10px;
 }
 
-/* Non-page actions (Refresh, Fullscreen) on their own row — keeps the 4-column
-   width via two empty placeholders so every button is the same size. */
+/* Non-page actions (Refresh, Fullscreen, Close) on their own row — keeps the
+   4-column width via an empty placeholder so every button is the same size. */
 .popup-grid-secondary {
   padding-top: 0;
 }

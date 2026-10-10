@@ -64,6 +64,7 @@ setIcon("icon-timestamps", "clock");
 setIcon("icon-originals", "eye");
 setIcon("icon-refresh", "refresh");
 setIcon("icon-fullscreen", "fullscreen");
+setIcon("icon-close", "close");
 setIcon("icon-website", "website");
 setIcon("icon-open-live", "openLive");
 setIcon("icon-settings", "settings");
@@ -307,7 +308,13 @@ async function init() {
   if (liveUrl) {
     setDot("dot-open-live", tabs.length > 0);
     $("btn-open-live").title = (tabs.length ? "Focus" : "Open") + " your live page";
-    $("btn-open-live").addEventListener("click", () => focusTabsOrOpen(tabs, liveUrl));
+    // Opens in a separate window (no address bar) that remembers its screen,
+    // position and size — handled by the background so it survives this popup closing.
+    $("btn-open-live").addEventListener("click", () =>
+      tabs.length
+        ? focusTabsOrOpen(tabs, liveUrl)
+        : chrome.runtime.sendMessage({ action: "openLive", payload: { url: liveUrl } })
+    );
   } else {
     $("btn-open-live").disabled = true;
   }
@@ -419,6 +426,12 @@ async function init() {
       }
     }
     setTimeout(syncFullscreenBtn, 300);
+  });
+
+  // ── Close (end of program) ────────────────────────────────────────────
+  $("btn-close").addEventListener("click", async () => {
+    await chrome.runtime.sendMessage({ action: "closeLive", payload: { url: liveUrl } });
+    window.close();
   });
 
   // ── Refresh ───────────────────────────────────────────────────────────
