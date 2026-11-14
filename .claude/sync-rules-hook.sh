@@ -1,5 +1,7 @@
 #!/bin/bash
-# PostToolUse hook: syncs IDE rule files and skills when any of them is edited.
+# PostToolUse hook: mirrors agent skills between .claude/skills and .github/skills when one is edited.
+# Instruction rules need no sync: AGENTS.md is the single source; CLAUDE.md and
+# .github/copilot-instructions.md are one-line pointers to it.
 # Claude Code passes tool info as JSON on stdin.
 
 set -euo pipefail
@@ -17,9 +19,6 @@ except Exception:
 " 2>/dev/null || true)
 
 case "$FILE" in
-  *CLAUDE.md|*copilot-instructions*)
-    bash "$ROOT/.claude/sync-rules.sh" "$FILE"
-    ;;
   *.claude/skills/*/SKILL.md|*.github/skills/*/SKILL.md)
     bash "$ROOT/.claude/sync-skills.sh" "$FILE"
     ;;

@@ -1,23 +1,16 @@
 # AI Agents Instructions for Glossa.live Projector Cast Extension
 
-## IDE Rules Sync
+## Agent Instructions
 
-This file is kept in sync across all IDE rule files:
+`AGENTS.md` is the **single source** of agent instructions. The other harness files only point here:
 
-| File                              | IDE            |
-| --------------------------------- | -------------- |
-| `CLAUDE.md`                       | Claude Code    |
-| `.github/copilot-instructions.md` | GitHub Copilot |
+| File                              | IDE            | Contents                           |
+| --------------------------------- | -------------- | ---------------------------------- |
+| `AGENTS.md`                       | all            | the instructions (edit this one)   |
+| `CLAUDE.md`                       | Claude Code    | `@AGENTS.md` import — pointer only |
+| `.github/copilot-instructions.md` | GitHub Copilot | one-line link — pointer only       |
 
-**When asked to update these rules or instructions, always run the sync script after saving changes:**
-
-```bash
-bash .claude/sync-rules.sh <path-to-this-file>
-```
-
-Replace `<path-to-this-file>` with the path of the file you just edited — e.g. `CLAUDE.md` or `.github/copilot-instructions.md`. The two files are byte-identical.
-
-> Claude Code: a `PostToolUse` hook in `.claude/settings.json` runs this automatically on every edit.
+**When asked to update these rules or instructions, edit `AGENTS.md`** — never add content to `CLAUDE.md` or `.github/copilot-instructions.md`. No sync step is needed.
 
 ### Skills (Claude ↔ Copilot)
 
@@ -31,6 +24,7 @@ Reusable agent skills are mirrored across tools. Claude Code and GitHub Copilot 
 Frontmatter requires `name` (lowercase-hyphen, must match the parent directory) and `description`. Edit either file, then `bash .claude/sync-skills.sh <path-to-edited-file>` copies it to the mirror (also run automatically by the `PostToolUse` hook). Current skills:
 
 - **`testing`** — add, run, and edit Jest + ts-jest unit tests.
+- **`update-selectors`** — re-derive the glossa.live selectors in `views/glossa/selectors.js` after the site changes.
 
 ---
 

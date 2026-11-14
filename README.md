@@ -30,7 +30,7 @@ If you want to try to install it as Developer
 
 ## 🛠 Contributing
 
-IDE assistant rules live in [CLAUDE.md](CLAUDE.md) (mirrored to `.github/copilot-instructions.md`).
-Edit either file and the sync script / `PostToolUse` hook keeps the pair byte-identical.
+AI agent instructions live in [AGENTS.md](AGENTS.md) (`CLAUDE.md` and `.github/copilot-instructions.md` just point to it).
+Edit only `AGENTS.md`.
 
 ## TODOs
